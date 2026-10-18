@@ -1,0 +1,15 @@
+# Klipper SAVE_CONFIG 自动生成的备份
+printer-*.cfg
+# Moonraker 自动备份
+.moonraker.conf.bkp
+*.bkp
+# 配置打包备份
+*.zip
+# 校准过程输出的数据
+*.csv
+# 编辑器 / 系统文件
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store

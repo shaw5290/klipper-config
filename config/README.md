@@ -5,12 +5,12 @@
 - 更换某个部件：只替换对应模块的 include。
 - 不需要某个功能：注释掉对应的 include。依赖它的宏会自动跳过该步骤，不会报错。
 
-内容来源：单头以最新的 `printer_merged.cfg` 为准（包含热床倾斜调试的全部修复，也就是 `config_merged.md` 的内容加上后续修改）；多头部分来自 `config-global/multitool`。
+内容来源（旧文件已从仓库删除，可在提交 `d345fa9` 中找回）：单头以最新的 `printer_merged.cfg` 为准（包含热床倾斜调试的全部修复，也就是 `config_merged.md` 的内容加上后续修改）；多头部分来自 `config-global/multitool`。
 
 ## 目录结构
 
 ```
-config-modular/
+config/
 ├── printer.cfg                  # 根文件：选择机型 + 最底部的小螃蟹 SAVE_CONFIG 数据
 ├── profile_singletool.cfg       # 机型清单：单热端
 ├── profile_multitool.cfg        # 机型清单：多热端
@@ -112,5 +112,5 @@ config-modular/
 2. **多头的 `z_positions`**：已改用单头的值。如果多头机器的丝杆位置确实不同，请在 `modules/leveling/z_tilt.cfg` 中改回。
 3. **多头的工具数量不一致**（保留原值，未修改）：`[multitool] tool_count: 2`，热端定义了 T0..T7 共 8 个，`_TOOL_CALIB_VARS tool_count: 8`，停靠坞坐标有 t0..t8 共 9 组。请按实际热端数量统一。
 4. **多热端插件的安装脚本**（install.sh）默认把文件放在 `~/printer_data/config/multitool/`。以后更新插件时，注意不要让它覆盖或重新引用旧路径。
-5. **未迁移的内容**：`temp-test` 测试配置、未被引用的旧文件（`singletool/toolhead.cfg`、`eddy_probe_z.cfg`、`xy对刀.cfg`）没有放进新目录，原文件仍在 `config-global` 里。
+5. **未迁移的内容**：`temp-test` 测试配置、未被引用的旧文件（`singletool/toolhead.cfg`、`eddy_probe_z.cfg`、`xy对刀.cfg`）没有迁移，已从仓库删除，需要时可从提交 `d345fa9` 的 `config-global/` 中找回。
 6. **调试状态**：`PRINT_START` 里的热床和喷头升温仍是注释状态（调试阶段），正式打印前请取消注释。

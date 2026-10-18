@@ -1,0 +1,5 @@
+# 统一使用 LF 换行，避免 Windows 下产生只有换行符不同的修改
+* text=auto eol=lf
+*.zip binary
+*.png binary
+*.jpg binary
