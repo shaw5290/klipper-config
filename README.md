@@ -8,6 +8,8 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
 |---|---|
 | `config/` | 打印机配置，整个目录部署到 `~/printer_data/config/` |
 | `config/README.md` | 模块结构、拔插规则、依赖关系、部署前注意事项 |
+| `debug/printer.cfg` | 单文件调试配置：XYZ 运动、调平、简单打印头，新机器先调通运动用 |
+| `docs/新机器配置指南.md` | 新机器从零开始的配置与校准步骤 |
 | `docs/热床倾斜调试与修复记录.md` | 热床网床前后倾斜问题的排查与修复记录 |
 
 ## 快速开始
