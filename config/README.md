@@ -42,6 +42,19 @@ config/
         └── tool_calibrate_eddy.cfg # 多热端偏移校准（涡流对刀）
 ```
 
+## 部署
+
+把本目录的**全部内容**复制到打印机的 `~/printer_data/config/`。`modules/` 必须和 `printer.cfg`、`profile_*.cfg` 在同一层，否则启动会报 `Include file '.../modules/core/mainboard.cfg' does not exist`。
+
+```bash
+cp -r ~/printer-config/config/. ~/printer_data/config/
+ls ~/printer_data/config/modules/core/    # 应看到 mainboard.cfg 等文件
+```
+
+- 不要用 Mainsail / Fluidd 网页上传，网页不会上传 `modules/` 文件夹
+- 源路径末尾的 `/.` 不能少，否则会多套一层 `config/config/`
+- 不要用 `sudo` 复制；如果已经用了，执行 `sudo chown -R klipper:klipper ~/printer_data/config`
+
 ## 切换机型
 
 在根目录 `printer.cfg` 里二选一：

@@ -14,6 +14,11 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
 
 ## 快速开始
 
+0. 把 `config/` 目录里的**全部内容**（包括 `modules/` 文件夹）复制到打印机的 `~/printer_data/config/`，`modules/` 要和 `printer.cfg` 在同一层：
+   ```bash
+   cp -r ~/printer-config/config/. ~/printer_data/config/
+   ```
+   不要用 Mainsail/Fluidd 网页上传（不会上传文件夹）。详见 `docs/新机器配置指南.md` 第 1 步。
 1. 在 `config/printer.cfg` 中选择机型：`profile_singletool.cfg`（单热端）或 `profile_multitool.cfg`（多热端）。
 2. 在对应的机型清单文件里，按实际硬件增减模块。
 3. 部署前，把打印机当前 `printer.cfg` 末尾的 SAVE_CONFIG 数据块替换到 `config/printer.cfg` 最底部。
