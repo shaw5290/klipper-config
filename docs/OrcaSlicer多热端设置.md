@@ -23,17 +23,19 @@
 ```
 PRINT_START_HOME BED=[first_layer_bed_temperature]
 PRINT_START_LEVEL
+PRINT_START_TAP
 PRINT_START_CALIBRATE INITIAL_TOOL=[initial_tool] T0_USED={is_extruder_used[0]} T1_USED={is_extruder_used[1]}
 PRINT_START_MESH
 PRINT_START_TOOL INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial_layer[0]} T0_USED={is_extruder_used[0]} T1_TEMP={nozzle_temperature_initial_layer[1]} T1_USED={is_extruder_used[1]}
 ```
 
-**为什么要分行**：Klipper 里一个宏从开始到结束是一条命令，执行期间不会插入其它命令。如果只写一行 `PRINT_START`，等热床、调平、扫网床、换头全在这一条命令里，网页上点"取消打印"要等它全部做完才生效（看起来像取消了但调平还在继续）。分成 5 行后，取消会在**当前这一步**结束后立即生效。
+**为什么要分行**：Klipper 里一个宏从开始到结束是一条命令，执行期间不会插入其它命令。如果只写一行 `PRINT_START`，等热床、调平、扫网床、换头全在这一条命令里，网页上点"取消打印"要等它全部做完才生效（看起来像取消了但调平还在继续）。分成多行后，取消会在**当前这一步**结束后立即生效。
 
 | 行 | 作用 | 参数 |
 |---|---|---|
 | `PRINT_START_HOME` | 热床升温、归零、等热床 | `BED` |
 | `PRINT_START_LEVEL` | 三点调平、重新 Z 归零 | — |
+| `PRINT_START_TAP` | 喷嘴加热到 150°C 后用 tap 定 Z（多头用 T0）。必须放在 `PRINT_START_LEVEL` 之后：之后不能再有 `G28`，否则 tap 的修正会被覆盖 | — |
 | `PRINT_START_CALIBRATE` | 打印前对刀（加 `CALIBRATE=0` 跳过） | `INITIAL_TOOL`、`Tn_USED`、`CALIBRATE` |
 | `PRINT_START_MESH` | 扫网床 | — |
 | `PRINT_START_TOOL` | 换上首个工具、等到温 | `INITIAL_TOOL`、`Tn_TEMP`、`Tn_USED` |
