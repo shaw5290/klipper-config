@@ -18,19 +18,37 @@
 
 ### 2. 起始 G-code
 
-打印机设置 → 机器 G-code → **起始 G-code**，**整段替换**为（2 个热端）：
+打印机设置 → 机器 G-code → **起始 G-code**，**整段替换**。推荐用**分行写法**（2 个热端）：
+
+```
+PRINT_START_HOME BED=[first_layer_bed_temperature]
+PRINT_START_LEVEL
+PRINT_START_CALIBRATE INITIAL_TOOL=[initial_tool] T0_USED={is_extruder_used[0]} T1_USED={is_extruder_used[1]}
+PRINT_START_MESH
+PRINT_START_TOOL INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial_layer[0]} T0_USED={is_extruder_used[0]} T1_TEMP={nozzle_temperature_initial_layer[1]} T1_USED={is_extruder_used[1]}
+```
+
+**为什么要分行**：Klipper 里一个宏从开始到结束是一条命令，执行期间不会插入其它命令。如果只写一行 `PRINT_START`，等热床、调平、扫网床、换头全在这一条命令里，网页上点"取消打印"要等它全部做完才生效（看起来像取消了但调平还在继续）。分成 5 行后，取消会在**当前这一步**结束后立即生效。
+
+| 行 | 作用 | 参数 |
+|---|---|---|
+| `PRINT_START_HOME` | 热床升温、归零、等热床 | `BED` |
+| `PRINT_START_LEVEL` | 三点调平、重新 Z 归零 | — |
+| `PRINT_START_CALIBRATE` | 打印前对刀（加 `CALIBRATE=0` 跳过） | `INITIAL_TOOL`、`Tn_USED`、`CALIBRATE` |
+| `PRINT_START_MESH` | 扫网床 | — |
+| `PRINT_START_TOOL` | 换上首个工具、等到温 | `INITIAL_TOOL`、`Tn_TEMP`、`Tn_USED` |
+
+**单行写法**（效果相同，但取消要等整个开始流程做完）：
 
 ```
 PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial_layer[0]} T0_USED={is_extruder_used[0]} T1_TEMP={nozzle_temperature_initial_layer[1]} T1_USED={is_extruder_used[1]}
 ```
 
-热端更多时，按顺序在后面追加 `T2_TEMP=… T2_USED=…`、`T3_TEMP=… T3_USED=…`，例如 5 个热端：
-
-```
-PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial_layer[0]} T0_USED={is_extruder_used[0]} T1_TEMP={nozzle_temperature_initial_layer[1]} T1_USED={is_extruder_used[1]} T2_TEMP={nozzle_temperature_initial_layer[2]} T2_USED={is_extruder_used[2]} T3_TEMP={nozzle_temperature_initial_layer[3]} T3_USED={is_extruder_used[3]} T4_TEMP={nozzle_temperature_initial_layer[4]} T4_USED={is_extruder_used[4]}
-```
+热端更多时，在 `PRINT_START_CALIBRATE`、`PRINT_START_TOOL`（或单行 `PRINT_START`）后面按顺序追加 `T2_USED=…`、`T2_TEMP=…` 等。
 
 ⚠️ **写几个就要有几个挤出机**：Orca 里只设了 2 个挤出机，起始 G-code 里却写了 `[2]`、`[3]`……，切片时会报下标越界。
+
+需要立刻停止时用网页上的**紧急停止**（M112），它不排队，会马上停机（之后要 `FIRMWARE_RESTART`）。
 
 ### 3. 结束 G-code
 
