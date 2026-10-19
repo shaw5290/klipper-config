@@ -39,7 +39,8 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
 
 | 项目 | 用于 |
 |---|---|
-| 修改 `klippy/extras/ldc1612.py`：`REG_ERROR_CONFIG` 的 `0x1f` 改为 `0x1c`，`SETTLETIME` 由 0.005 改为 0.0002 | 涡流探针（见 `modules/probe/eddy_tgl36v3.cfg` 开头注释） |
+| 修改 `klippy/extras/ldc1612.py`：`REG_ERROR_CONFIG` 的 `0x1f` 改为 `0x1c`，`SETTLETIME` 由 0.005 改为 0.0002，`self.data_rate` 由 400 改为 250（工具头板 STM32F072 负担不了 400） | 涡流探针 tap（见 `docs/多头配置指南.md` 第五节 4.1） |
+| SciPy：`~/klippy-env/bin/pip install scipy` | `data_rate` 改为 250 后 tap 滤波器需要 |
 | klipper-multitool-stats 插件 | 多头：`[multitool]`、换头命令、M104/M109 覆写 |
 | tool_eddy_calibration 插件（https://github.com/chengxg/tool_eddy_calibration） | 多头：涡流对刀 |
 
@@ -49,7 +50,8 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
 |---|---|
 | 单头：XYZ 运动、涡流探针、三点调平、网床 | ✅ 已在本机验证（网床差值 0.07mm，见 `docs/热床倾斜调试与修复记录.md`） |
 | 多头：对刀线圈 XY 扫描 | ✅ 已验证（重复精度约 0.004mm） |
-| 多头：tap 测 Z、`CALIBRATE_TOOL` 一键对刀 | ⏳ 调试中（tap 阈值待确定） |
+| 涡流 tap（`tap_threshold: 64820.919`） | ✅ 已验证（5 次极差 0.008mm） |
+| 多头：`CALIBRATE_TOOL` 一键对刀 | ⏳ 待热端 PID 校准后执行 |
 | 多头：停靠坞坐标、Y 负值行程（`position_min: -30`） | ⏳ 待实测 |
 | 无限位开关归零、其它主板 / 工具头 | ❌ 未提供、未验证 |
 
