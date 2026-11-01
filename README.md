@@ -71,7 +71,8 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
 | `config/` | 打印机配置，整个目录部署到 `~/printer_data/config/` |
 | `config/README.md` | 模块结构、拔插规则、依赖关系、部署前注意事项 |
 | `debug/printer.cfg` | 单文件调试配置：XYZ 运动、调平、简单打印头，新机器先调通运动用 |
-| `docs/新机器配置指南.md` | 新机器从零开始的配置与校准步骤 |
+| `docs/` | VitePress 文档站：安装、逐步调试、常见问题（`npm install` 后 `npm run docs:dev` 本地预览） |
+| `docs/guide/` | 安装与调试分步文档（原 `docs/新机器配置指南.md`） |
 | `docs/klipper-toolchanger安装与迁移.md` | klipper-toolchanger 离线安装步骤，以及从 multitool 迁移的计划（尚未执行） |
 | `docs/OrcaSlicer多热端设置.md` | OrcaSlicer 多热端：起始/换料 G-code、挤出机、换料回抽、擦拭塔、Ooze 预热 |
 | `docs/多头配置指南.md` | 从单头切换为多头（2 个打印头为例）：要改的配置、实测项、调试步骤 |
@@ -83,7 +84,7 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
    ```bash
    cp -r ~/printer-config/config/. ~/printer_data/config/
    ```
-   不要用 Mainsail/Fluidd 网页上传（不会上传文件夹）。详见 `docs/新机器配置指南.md` 第 1 步。
+   不要用 Mainsail/Fluidd 网页上传（不会上传文件夹）。详见 `docs/guide/install/deploy.md`。
 1. 在 `config/printer.cfg` 中选择机型：`profile_singletool.cfg`（单热端）或 `profile_multitool.cfg`（多热端）。
 2. 在对应的机型清单文件里，按实际硬件增减模块。
 3. 部署前，把打印机当前 `printer.cfg` 末尾的 SAVE_CONFIG 数据块替换到 `config/printer.cfg` 最底部。

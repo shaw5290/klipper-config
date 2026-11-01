@@ -1,0 +1,21 @@
+# 10. 多头专项
+
+仅多头机型。详细步骤和实测记录见 [多头配置指南](/多头配置指南)，这里是顺序。
+
+1. **配置修改**：`printer.cfg` 切换到 `profile_multitool.cfg`，注释没装的热端，统一 `tool_count`，喉管风扇监听所有热端，Y 允许负值（停靠坞在热床前方）。
+2. **停靠坞坐标**：手动把工具头移到每个停靠坞的位置，记下坐标，填到 `modules/multitool/changer_cxchanger.cfg` 的 `variable_tN_dock_x` / `variable_tN_dock_y`。同时检查 `dock_shift_x`、`dock_dodge_y`、`dock_safe_y`。
+3. **低速试换头**：先把 `feed_safe` / `feed_fast` / `feed_slow` 调低，依次执行 `T0`、`UNTOOL`、`T1`、`T0`，抓取和放回都正确后再恢复速度。本机单次换头约 14.5 秒。
+4. **每个热端做 PID**（[第 3 步](./03-pid-fan)），否则对刀会卡在"等温中"。
+5. **对刀线圈**：`TEST_LDC1612`（约 2.2MHz），量出 `coil_x/y/z`，`scan_height` 让喷嘴在线圈上方约 0.5mm。本机 `coil_x: 168.08`、`coil_y: 283.75`、`coil_z: 0.85`、`scan_height: 0.5`。
+6. **一键对刀**（tap 已在 [第 4 步](./04-eddy) 调通）：
+
+   ```
+   G28
+   CALIBRATE_TOOL TOOL=0          ; 基准，必须先做
+   CALIBRATE_TOOL TOOL=1          ; 两次之间不要 G28
+   T1                             ; 输出"T1 加载校准值"即为偏移，换头时自动加载
+   ```
+
+   单个工具都没问题后，可以用 `CALIBRATE_ALL_TOOLS` 批量校准，结果保存在 `myvariables.cfg`。本机 T1 偏移 X=-0.3835 Y=-0.2946 Z=0.2440。
+
+7. **切片设置**：见 [OrcaSlicer 多热端设置](/OrcaSlicer多热端设置)。
