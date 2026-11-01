@@ -13,3 +13,5 @@ printer-*.cfg
 *.swp
 Thumbs.db
 .DS_Store
+# Claude Code 本地工作区（worktree 等）
+.claude/
