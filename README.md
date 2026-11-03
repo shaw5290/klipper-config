@@ -88,6 +88,7 @@ CoreXY 三 Z（Trident 式）打印机的 Klipper 配置，支持单热端和多
 1. 在 `config/printer.cfg` 中选择机型：`profile_singletool.cfg`（单热端）或 `profile_multitool.cfg`（多热端）。
 2. 在对应的机型清单文件里，按实际硬件增减模块。
 3. 部署前，把打印机当前 `printer.cfg` 末尾的 SAVE_CONFIG 数据块替换到 `config/printer.cfg` 最底部。
+4. 在控制台输入 `MACRO_HELP`，会按分类（打印、调平、探针、换头、对刀、温度、调试、帮助）列出当前已加载的宏；输入 `MACRO_HELP ALL=1` 时连 `_` 开头的内部宏一起列出。新增宏时，`description` 以【分类】开头，比如 `description: 【调试】……`，就会自动出现在对应分类下。
 
 ## 历史
 
