@@ -35,6 +35,7 @@ export default defineConfig({
           { text: '1. 首次启动与基础检查', link: '/guide/debug/01-first-boot' },
           { text: '2. XY 归零与行程', link: '/guide/debug/02-homing' },
           { text: '3. PID 与风扇', link: '/guide/debug/03-pid-fan' },
+          { text: '3.1 多热端温度调试', link: '/guide/debug/hotend-temperature' },
           { text: '4. 涡流探针校准', link: '/guide/debug/04-eddy' },
           { text: '5. 三点调平', link: '/guide/debug/05-z-tilt' },
           { text: '6. 网床', link: '/guide/debug/06-bed-mesh' },
