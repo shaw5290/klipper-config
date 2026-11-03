@@ -17,6 +17,7 @@ export default defineConfig({
       {
         text: '开始',
         items: [
+          { text: '新手必读：基本操作', link: '/guide/basics' },
           { text: '硬件清单', link: '/guide/hardware' },
         ],
       },

@@ -4,6 +4,10 @@
 
 按顺序做：先确认读数和接线，再统一功率、做 PID，最后测预热时间。每个热端都要做一遍。
 
+::: tip 第一次调试
+先看 [新手必读：调试的基本操作](/guide/basics)：命令在哪里输入、怎么改配置和重启、急停在哪、移动命令怎么看。
+:::
+
 ## 0. 先把温度保护打开
 
 ::: danger 没有温度保护的热端
@@ -30,6 +34,7 @@ max_temp: 300      # 按热端和喷嘴的安全上限填写
 | 现象 | 原因 |
 |---|---|
 | 都在室温 ±2°C | 正常 |
+| 读数在 -30～-45°C 左右 | 这一路没接热敏（本机 T2～T7）。只有 `min_temp: -210` 时才不报错；装了热端的必须改成 0 |
 | 某一路报 `ADC out of range` | 热敏断线、插头没插紧、`sensor_pin` 填错 |
 | 读数远高于室温（几百度） | 热敏短路 |
 | 读数稳定但和室温差 10°C 以上 | `sensor_type` 填错（不是 Generic 3950，比如是 PT1000 或 NTC 100K） |
@@ -53,7 +58,7 @@ SET_HEATER_TEMPERATURE HEATER=extruder1 TARGET=60
 | 上升的是别的热端（比如 `extruder2`） | 加热棒或热敏插错了口，对照扩展板丝印重插 |
 | 读数不升，热端也不热 | 加热棒没接好或 MOSFET 损坏；`heater_pin` 填错 |
 | 热端在变热，但读数不升 | 这一路热敏插到了别的口，或者 `sensor_pin` 填错 |
-| 报 `Heater extruder1 not heating at expected rate` | 同上两种情况之一；也可能是 `max_power` 太低 |
+| 报 `Heater extruder1 not heating at expected rate` | 见下面[加热异常停机排查](#heater-fault) |
 
 测完关掉，换下一个：
 
@@ -131,11 +136,65 @@ M109 T1 S220
 - 一直在涨：预热时间不够，加长。
 - 基本为 0，但坞里渗料多：预热时间太长，缩短。
 
+## 加热异常停机排查 {#heater-fault}
+
+报错 `Heater extruderN not heating at expected rate ... Printer is shutdown`：Klipper 每隔一段时间检查温度涨了多少，涨得太慢就停机。这是安全保护，**不要为了不报错去放宽或关闭 `verify_heater`**。
+
+### 1. 看停机前的温度和功率
+
+下面的命令要在打印机的 **SSH 终端**执行（`ssh klipper@<打印机IP>`）。在 Mainsail / Fluidd 控制台里输入会报 `Unknown command:"GREP -"`。不方便 SSH 时，从网页下载 `klippy.log`（Mainsail：机器页 → 日志；Fluidd：配置页 → logs）。
+
+```
+grep -B 120 "not heating at expected rate" ~/printer_data/logs/klippy.log | grep -oE "extruder[0-9]*: target=[^ ]* temp=[^ ]* pwm=[^ ]*" | tail -60
+```
+
+没有输出时，日志可能已轮换，把 `klippy.log` 换成 `klippy.log.1`。只用 `grep ... | tail -30` 看到的是重启后的记录（`target=0`），看不出问题，要用上面带 `-B 120` 的写法。
+
+| 日志里看到的 | 说明 |
+|---|---|
+| `pwm` 顶在 `max_power`，温度基本不动 | 加热棒没在加热：线断了、插头松了、插错口，或扩展板该口没输出 |
+| `pwm` 顶在 `max_power`，温度慢慢涨 | 功率不够（`max_power` 太低），或风扇吹走了热量 |
+| 温度在往下掉 | 坞风扇或模型风扇对着加热块吹 |
+| 温度忽高忽低跳变 | 热敏接触不良 |
+| 加热这一路时，另一路 `target=0` 的温度却在涨 | 加热棒插错口，热量加到了那个热端上 |
+
+### 2. 断电量加热棒电阻
+
+关电源，拔下扩展板上对应 `TnH` 口的插头，量两根线之间的电阻：
+
+| 读数 | 说明 |
+|---|---|
+| 约 11～15 Ω（24V 40～50W） | 加热棒和线是好的，问题在插头或扩展板。把两个热端的加热插头对调，看问题跟着加热棒走还是跟着口走 |
+| 无穷大（OL） | 断路。弯一弯靠近热端和拖链的那段线，看读数会不会时有时无；找不到断点就换加热棒 |
+| 接近 0 | 短路，换加热棒 |
+
+### 3. 晃线测试（时好时坏时）
+
+```
+SET_HEATER_TEMPERATURE HEATER=extruder1 TARGET=60
+```
+
+到温后用手轻轻晃靠近热端和拖链那段线，看温度曲线。一晃温度就掉，就是这段线或插头接触不良。测完 `SET_HEATER_TEMPERATURE HEATER=extruder1 TARGET=0`。
+
+### 本机记录（2026-11-04，T1）
+
+执行 `CALIBRATE_ALL_TOOLS` 时停机。这个宏一开始会把所有工具预热到 150°C，日志里 `extruder`（T0）和 `extruder1`（T1）同时 `target=150`、`pwm=0.500`：
+
+| 热端 | 温度变化 | 结论 |
+|---|---|---|
+| `extruder`（T0） | 104 → 128°C，约 4°C/s | 正常 |
+| `extruder1`（T1） | 20 多秒一直 23°C | 加热棒没有出热 |
+| `extruder2`～`7` | -30～-45°C，`target=0` | 没接热敏，没有异常升温，排除插错口 |
+
+T1 以前做过 PID，判断是反复进出坞时线或插头接触不良。之后重新运行 `CALIBRATE_ALL_TOOLS`，T1 正常加热到 150°C 并完成对刀，属于**时好时坏**，长时间打印前要做第 3 步晃线测试。
+
+这次停机靠的是加热速率检查。如果断的是**热敏**，读数会变成 -35°C 左右，`min_temp: -210` 时 Klipper 不报错，加热棒却一直全功率加热，所以装好的热端必须用 `min_temp: 0`（见第 0 步）。
+
 ## 常见问题
 
 | 现象 | 原因与处理 |
 |---|---|
-| `Heater extruderN not heating at expected rate` | 接线错误（第 2 步）、`max_power` 太低，或者坞风扇吹得太猛 |
+| `Heater extruderN not heating at expected rate` | 加热棒断线或接触不良、接错口、`max_power` 太低，或者风扇吹得太猛。见[加热异常停机排查](#heater-fault) |
 | `ADC out of range` | 热敏断线或接触不良，检查插头和换头时会弯折的那段线 |
 | 温度在目标上下 3～5°C 摆动 | PID 还是占位值，或者改过 `max_power` 后没重做 PID |
 | 换头时停下来等温很久 | 预热时间不够（第 6 步），或者 Orca 没开 Ooze 自动预热 |

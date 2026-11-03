@@ -16,6 +16,6 @@
    T1                             ; 输出"T1 加载校准值"即为偏移，换头时自动加载
    ```
 
-   单个工具都没问题后，可以用 `CALIBRATE_ALL_TOOLS` 批量校准，结果保存在 `myvariables.cfg`。本机 T1 偏移 X=-0.3835 Y=-0.2946 Z=0.2440。
+   单个工具都没问题后，可以用 `CALIBRATE_ALL_TOOLS` 批量校准，结果保存在 `myvariables.cfg`。本机 T1 偏移：2026-10 为 X=-0.3835 Y=-0.2946 Z=0.2440；2026-11-04 重新对刀为 X=-0.1345 Y=+0.0552 Z=-0.0699（Z 差 0.31mm，需再跑一次确认重复性）。对刀结果用 `SAVE_VARIABLE` 自动写入 `myvariables.cfg`，**不需要 `SAVE_CONFIG`，也不需要重启**。
 
 7. **切片设置**：见 [OrcaSlicer 多热端设置](/OrcaSlicer多热端设置)。

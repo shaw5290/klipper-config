@@ -11,6 +11,9 @@
 | `DigitalFilter require the SciPy module` | `ldc1612.py` 的 `data_rate` 改了，需要安装 SciPy |
 | `SHAPER_CALIBRATE` 报缺少 numpy | `~/klippy-env/bin/pip install numpy` |
 | `Must home axis first` | 先 `G28`；振动补偿用 `SHAPER_TEST` 宏会自动归零 |
+| `Unknown command:"GREP -"` 之类 | 把 Linux 命令输进了网页控制台。`grep`、`ls`、`sudo …` 要在 SSH 终端里执行，见 [新手必读](./basics#commands) |
+| `Heater extruderN not heating at expected rate`，随后 `Printer is shutdown` | 加热棒没出热或升温太慢。先 `FIRMWARE_RESTART`，再按 [加热异常停机排查](./debug/hotend-temperature#heater-fault) 看日志、量电阻 |
+| 温度面板里某个热端显示 -30～-45°C | 这一路没接热敏。装了热端的必须是 `min_temp: 0`，见 [温度调试第 0 步](./debug/hotend-temperature) |
 | 打印中途 Klipper Shutdown | 在 `klippy.log` 中搜索 `Shutdown`，常见原因是 CAN 通讯超时或加热保护 |
 | 每次打印完都提示 SAVE_CONFIG | 正常，打印前扫网床导致的，可以忽略。见 [网床](./debug/06-bed-mesh#为什么每次打印完都提示-save-config) |
 
@@ -32,9 +35,11 @@
 |---|---|
 | 进坞时撞 | `tN_dock_x` 没对准，左右每次 0.25 mm 扫一遍取中点；撞过后先 `G28 X Y`。见 [停靠坞调试第 1 步](./debug/dock#step-1) |
 | 横移时撞 | `dock_shift_x` 过量，或 `dock_x` 偏了。见 [第 2 步](./debug/dock#step-2) |
-| 不装耗材能放回，装上耗材后热端被带出坞 | 横移量不够，挤出机还夹着耗材。装着耗材重测 `dock_shift_x`，标准是耗材完全没阻力。见 [第 2 步](./debug/dock#step-2) |
+| 不装耗材能放回，装上耗材后热端被带出坞 | 横移后的位置不够，挤出机还夹着耗材。装着耗材找"松开 X"，再调这个头的 `dock_x` 或共用的 `dock_shift_x`，标准是耗材完全没阻力。见 [第 2 步](./debug/dock#step-2) |
 | 放回时热端被铁氟龙管拉出来 | 管子太短或走线太紧，加长、重新走线 |
-| 连续换头后越来越偏 | 丢步：`accel_swap` 不要超过 `max_accel`，检查皮带 |
+| 连续换头后越来越偏 | 丢步：`accel_swap` 不要超过 `max_accel`，检查皮带。用 `TOOLCHANGE_TEST TOOL=0 COUNT=20 REHOME=5` 复查 |
+| 一键对刀一开始就显示"所有工具校准完毕" | 正常，提示在宏展开时就打印了，以最后的"换热端 #… 耗时"为准 |
+| 对刀后要不要 `SAVE_CONFIG` / 重启 | 都不用，偏移已写入 `myvariables.cfg`。执行 `T1` 看"T1 加载校准值"确认 |
 
 ## 打印质量
 

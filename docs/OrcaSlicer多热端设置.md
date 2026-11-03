@@ -3,6 +3,8 @@
 本文对应 `config/modules/macros/print.cfg` 中的 `PRINT_START` 宏，以 2 个热端（T0、T1）为例。热端数量不同时，按同样的规律增减。
 
 > 前提：多头配置已调通（换头、PID、一键对刀），见 `docs/多头配置指南.md`。
+>
+> 第一次用 OrcaSlicer：下面的"打印机设置""工艺设置"是 Orca 左上角的三个下拉框（打印机 / 耗材 / 工艺）旁边的编辑按钮打开的设置页。改完记得点保存，存成自己的预设。
 
 ---
 
@@ -15,6 +17,9 @@
 | G-code 风格 | Klipper |
 | 挤出机数量 | **2**（按实际热端数量填写，和 `[multitool] tool_count` 一致） |
 | 标记对象（Label objects） | 开启（配合 `[exclude_object]`，可在打印中取消单个模型） |
+| 单挤出机多材料（Single Extruder Multi Material） | **关闭**。CxChanger 每个热端有自己的喷嘴，不是一个喷嘴换料 |
+| 挤出机 2 的喷嘴偏移（Extruder offset） | **X 0、Y 0**。偏移由 Klipper 换头时自动加载（来自一键对刀），Orca 里再填一次会偏两倍 |
+| 每个挤出机的喷嘴直径 | 按实际喷嘴填，一般都是 0.4 |
 
 ### 2. 起始 G-code
 
@@ -86,7 +91,7 @@ T{next_extruder}
 
 ### 1. 擦拭塔
 
-工艺 → 多材料 → **开启擦拭塔**。
+工艺 → 多材料 → **开启擦拭塔**。擦拭塔放在热床上靠后的位置，不要放在热床最前面（停靠坞在热床前方）。
 
 如果耗材和参数调得好，且模型不涉及快速、微小的挤出，可以把模型摆到靠近停靠坞的位置，关掉擦拭塔试打（无擦拭塔打印）。
 
@@ -97,7 +102,7 @@ T{next_extruder}
 | 项目 | 设置 | 说明 |
 |---|---|---|
 | 温度变化（软化温度） | **-180** | 闲置热端的待机温度 = 打印温度 - 180，基本等于关闭加热，不会在坞里渗料 |
-| 预热时间 | **35s** | 换头前提前多少秒开始加热下一个热端；按自己热端的加热速度调整 |
+| 预热时间 | **35s**（先用这个值，再按实测改） | 换头前提前多少秒开始加热下一个热端。按 [多热端温度调试第 6 步](/guide/debug/hotend-temperature) 实测：从冷态加热到打印温度要几秒，取最慢的热端再加 5 秒。本机 T0、T1 的 `max_power` 是 0.5，升温较慢，35 秒可能不够 |
 
 预热时间设得合适时，换头时下一个热端已接近打印温度，等温时间很短；设短了换头时会停下来等温，设长了热端在坞里会渗料。
 
@@ -111,13 +116,22 @@ T{next_extruder}
 2. 热床开始升温，同时 `G28` 归零
 3. 等热床到温（`M190`）
 4. 三点调平 `Z_TILT_ADJUST` → `G28 Z`（未引用调平模块时自动跳过）
-5. **打印前自动对刀**：对本次用到的工具依次执行 `CALIBRATE_TOOL`（换头 → 加热 150°C → tap 测 Z → 线圈测 XY → 保存偏移）。T0 是基准，即使本次没用到也会校准；对刀后关闭非首个工具的加热
+5. **打印前对刀**（需要 `CALIBRATE=1`，见下面的说明）：对本次用到的工具依次执行 `CALIBRATE_TOOL`（换头 → 加热 150°C → tap 测 Z → 线圈测 XY → 保存偏移）。T0 是基准，即使本次没用到也会校准；对刀后关闭非首个工具的加热
 6. 扫网床 `BED_MESH_CALIBRATE`（放在对刀之后，避免网床补偿影响 tap 测 Z）
 7. 换上首个工具 `T{INITIAL_TOOL}`（插件自动加载刚校准的偏移）
 8. 等首个工具到温（`M109 T{INITIAL_TOOL} S{温度}`）
 9. 重置挤出、抬高 Z，开始打印
 
-对刀每个工具约 1 分多钟（换头 + 加热 + 扫描）。不想每次都对刀时，在起始 G-code 末尾加 `CALIBRATE=0`，直接使用上次保存的偏移：
+::: warning 调试阶段的默认值（2026-11-04）
+`print.cfg` 里现在是调试设置：
+
+- `CALIBRATE` 默认 **0**：打印前**不对刀**，直接用上次 `CALIBRATE_ALL_TOOLS` 保存的偏移。想每次打印前对刀，在 `PRINT_START_CALIBRATE` 行（或单行 `PRINT_START`）末尾加 `CALIBRATE=1`。
+- `TAP` 默认 **0**：打印前**不用 tap 定 Z**。需要时在 `PRINT_START_TAP` 后面加 `TAP=1`。
+
+调试完成后，把 `print.cfg` 里对应的 `default(0)` 改回 `default(1)`，就不用在切片软件里加参数了。
+:::
+
+对刀每个工具约 1 分多钟（换头 + 加热 + 扫描）。默认改回对刀后，不想某次对刀时，在起始 G-code 末尾加 `CALIBRATE=0`，直接使用上次保存的偏移：
 
 ```
 PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial_layer[0]} T0_USED={is_extruder_used[0]} T1_TEMP={nozzle_temperature_initial_layer[1]} T1_USED={is_extruder_used[1]} CALIBRATE=0
@@ -129,7 +143,20 @@ PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEM
 
 ---
 
-## 四、首次打印检查
+## 四、给模型分配颜色
+
+在 Orca 左侧的耗材列表里设好耗材 1、耗材 2（耗材 1 对应 T0，耗材 2 对应 T1）。然后在模型上右键，或者用"涂色"工具，把不同部分分配给耗材 1 / 耗材 2。切片后预览里能看到两种颜色和擦拭塔。
+
+## 五、首次打印检查
+
+打印前先确认换头本身没问题（带着耗材）：
+
+```
+TOOLCHANGE_TEST TOOLS=0,1 COUNT=10
+```
+
+连续 10 轮 T0 → T1 换头没有撞击、热端都能正确放回和带出，再开始打印。见 [停靠坞与换头动作调试](/guide/debug/dock#step-5)。
+
 
 1. 切片后打开 G-code，确认开头是 `PRINT_START BED=… INITIAL_TOOL=… T0_TEMP=… T0_USED=…`，换色处是 `M104 S… T1` + `T1`。
 2. 开始打印时，控制台应显示 `PRINT_START: 首个工具 T0（…°C），用到的工具: T0, T1`，随后显示 `PRINT_START: 打印前对刀 T0, T1（T0 为基准）`。
