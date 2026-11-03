@@ -3,8 +3,8 @@
 仅多头机型。详细步骤和实测记录见 [多头配置指南](/多头配置指南)，这里是顺序。
 
 1. **配置修改**：`printer.cfg` 切换到 `profile_multitool.cfg`，注释没装的热端，统一 `tool_count`，喉管风扇监听所有热端，Y 允许负值（停靠坞在热床前方）。
-2. **停靠坞坐标**：手动把工具头移到每个停靠坞的位置，记下坐标，填到 `modules/multitool/changer_cxchanger.cfg` 的 `variable_tN_dock_x` / `variable_tN_dock_y`。同时检查 `dock_shift_x`、`dock_dodge_y`、`dock_safe_y`。
-3. **低速试换头**：`changer_cxchanger.cfg` 默认启用调试速度，依次执行 `T0`、`UNTOOL`、`T1`、`T0`，抓取和放回都正确后再恢复速度。本机单次换头约 14.5 秒。
+2. **停靠坞坐标与换头动作**：按 [停靠坞与换头动作调试](./dock) 逐步实测 `tN_dock_x/y`、`dock_shift_x`、`dock_dodge_y`，先手动逐行测进坞、横移、放回、抓取。
+3. **低速试换头**：`changer_cxchanger.cfg` 默认启用调试速度，用 `UNTOOL` / `T0` 连续换头无撞击后，再切换到正常速度。本机单次换头约 14.5 秒。
 4. **每个热端做温度调试**（[多热端温度调试](./hotend-temperature)）：接线核对、PID、预热时间，否则对刀会卡在"等温中"。
 5. **对刀线圈**：`TEST_LDC1612`（约 2.2MHz），量出 `coil_x/y/z`，`scan_height` 让喷嘴在线圈上方约 0.5mm。本机 `coil_x: 168.08`、`coil_y: 283.75`、`coil_z: 0.85`、`scan_height: 0.5`。
 6. **一键对刀**（tap 已在 [第 4 步](./04-eddy) 调通）：

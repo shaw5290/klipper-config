@@ -43,6 +43,7 @@ export default defineConfig({
           { text: '8. 挤出与第一层', link: '/guide/debug/08-extrusion' },
           { text: '9. 切片设置与试打', link: '/guide/debug/09-slicer' },
           { text: '10. 多头专项', link: '/guide/debug/10-multitool' },
+          { text: '10.1 停靠坞与换头动作', link: '/guide/debug/dock' },
           { text: '11. 收尾', link: '/guide/debug/11-finish' },
         ],
       },
