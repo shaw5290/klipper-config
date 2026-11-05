@@ -153,10 +153,9 @@ PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEM
 
 ```
 DOCK_TUNE TOOL=0
-DOCK_TUNE A=cycle TOOLS=0,1 COUNT=10
 ```
 
-连续 10 轮 T0 → T1 换头没有撞击、热端都能正确放回和带出，再开始打印。见 [停靠坞与换头动作调试](/guide/debug/dock#step-5)。
+T0、T1 都在弹窗第 3 步标记为已确认，第 4 步"多头切换 3 轮"没有撞击、热端都能正确放回和带出，再开始打印。见 [停靠坞与换头动作调试](/guide/debug/dock#tune)。
 
 
 1. 切片后打开 G-code，确认开头是 `PRINT_START BED=… INITIAL_TOOL=… T0_TEMP=… T0_USED=…`，换色处是 `M104 S… T1` + `T1`。
