@@ -119,7 +119,7 @@ DOCK_TUNE TOOL=0
 
 ### 调好以后怎么保存 {#save}
 
-弹窗和 `DOCK_SET` 改的值只在内存里，`RESTART` 或断电后会恢复成文件里的值，**必须写进文件**：
+弹窗里改的值只在内存里，`RESTART` 或断电后会恢复成文件里的值，**必须写进文件**：
 
 1. 点弹窗底部的"显示结果"，控制台会打印类似：
    `DOCK_TUNE 结果：把 changer_cxchanger.cfg 里 variable_t0_dock_x 改成 282.78，variable_dock_shift_x 是 -3.00，variable_dock_dodge_y 是 14.00；改完 RESTART`
@@ -128,56 +128,33 @@ DOCK_TUNE TOOL=0
    variable_t0_dock_x: 282.78
    ```
    推入深度、横移、后退调过的话，`variable_t0_dock_y`、`variable_dock_shift_x`、`variable_dock_dodge_y` 也一起改。
-3. 点"保存并重启"。重启后执行 `DOCK_SHOW`，确认显示的就是新值。
+3. 点"保存并重启"。重启后打开 `DOCK_TUNE TOOL=0`，弹窗第一行"参数"应该就是新值。
 4. 如果平时在电脑上改仓库里的 `config/`，再把同样的改动写回仓库，免得下次同步时被旧值覆盖。
 
-弹窗里改的值都是临时的（同 `DOCK_SET`），`RESTART` 后恢复成文件里的值。撞得重时不要点按钮，直接按急停，见[调试规则](#rules)。
+弹窗里改的值都是临时的，`RESTART` 后恢复成文件里的值。撞得重时不要点按钮，直接按急停，见[调试规则](#rules)。
 
-## 快速调试宏 {#macros}
+## 只有一个调试宏 {#macros}
 
-下面每一步的手动命令都可以换成 `DOCK_` 宏（在 `changer_cxchanger.cfg` 末尾）：坐标从配置自动算，全程绝对坐标（不会有 `G91` 忘切回的问题），横移有上限保护，改参数不用重启。
+换头调试只有 `DOCK_TUNE` 一个宏（在 `changer_cxchanger.cfg` 末尾），弹窗里的按钮都是调用它，格式是 `DOCK_TUNE A=<动作>`。平时只用弹窗；弹窗打不开时（网页版本太旧），也可以在控制台直接输入同样的命令，常用的：
 
-| 宏 | 作用 | 对应步骤 |
-|---|---|---|
-| `DOCK_SHOW` | 列出各坞的进坞 X、横移后 X、横移、后退 | 随时 |
-| `DOCK_GO TOOL=0` | 推进 T0 的坞并停在里面 | 第 1 步 |
-| `DOCK_GO TOOL=0 DX=-0.25` | 在 `dock_x - 0.25` 处推进（扫 X 用） | 第 1 步 1.3 |
-| `DOCK_SHIFT` | 在坞里再横移 -0.25（累计）；累计超过 \|dock_shift_x\|+0.5 会拒绝 | 第 2 步 |
-| `DOCK_SHIFT TO=-3` | 直接横移到累计 -3 | 第 2 步 |
-| `DOCK_BACK` | 往外后退 2 mm（累计），看热端何时分开 | 第 3 步 |
-| `DOCK_BACK TO=14` | 直接后退到 14 | 第 3 步 |
-| `DOCK_PICKUP TOOL=0` | 按当前参数抓取，停在"推入、磁吸结合" | 第 4 步 |
-| `DOCK_OUT` | X 回进坞位置（摆臂闭合），再退到坞前 | 每次看完 |
-| `DOCK_SET TOOL=0 X=283.65` | 临时改参数，立即生效，`TOOLCHANGE_TEST` 也会用新值 | 测完 |
-| `DOCK_SET SHIFT=-3` / `DOCK_SET DODGE=14` | 临时改共用的横移 / 后退 | 测完 |
-
-一个头的完整流程（以 T0 为例）：
-
-```
-G28 X Y
-DOCK_SHOW
-DOCK_GO TOOL=0                 ; 第 1 步：顺滑吗？偏左偏右？
-DOCK_OUT
-DOCK_GO TOOL=0 DX=-0.25        ; 偏右就往 X- 扫，偏左用正数
-DOCK_OUT
-DOCK_SET TOOL=0 X=283.65       ; 找到中点后临时生效
-DOCK_GO TOOL=0                 ; 第 2 步：装着耗材
-DOCK_SHIFT TO=-2               ; 先横移 -2，拉耗材
-DOCK_SHIFT                     ; 还有阻力就每次 -0.25，一次一条，每条都拉耗材、听声音
-DOCK_BACK TO=14                ; 第 3 步：热端应留在坞里
-DOCK_OUT
-DOCK_PICKUP TOOL=0             ; 第 4 步：热端吸上了吗
-DOCK_OUT                       ; 夹紧并带出
-TOOLCHANGE_TEST TOOL=0 COUNT=5 WAIT=2   ; 第 5 步
-```
-
-全部通过后，把 `DOCK_SET` 改过的值写进 `changer_cxchanger.cfg`（`RESTART` 后临时值会恢复成文件里的值）。
+| 命令 | 等于弹窗里的 |
+|---|---|
+| `DOCK_TUNE TOOL=0` | 打开 T0 的弹窗 |
+| `DOCK_TUNE A=go` / `DOCK_TUNE A=out` | 进坞 / 退出坞 |
+| `DOCK_TUNE A=shift D=-0.1` | 横移 -0.1 |
+| `DOCK_TUNE A=back D=1` | 后退 +1 |
+| `DOCK_TUNE A=release` | 放回测试 |
+| `DOCK_TUNE A=confirm V=0` / `V=1` | 确认热端在坞里 / 在打印头上 |
+| `DOCK_TUNE A=retry D=-0.1` | 否 → X -0.1 再放回 |
+| `DOCK_TUNE A=okpick` | 是，已停靠 → 抓回来 |
+| `DOCK_TUNE A=cycle COUNT=10` | 连续取放 10 轮（用换头插件 `UNTOOL` / `T0`） |
+| `DOCK_TUNE A=cycle TOOLS=0,1 COUNT=10` | 两个头混切 10 轮 |
+| `DOCK_TUNE A=result` | 显示结果 |
 
 注意：
 
-- 打印头上装的热端要和 `TOOL` 一致。
-- 还停在坞里（没 `DOCK_OUT`）或打印头在坞附近时，`DOCK_GO` / `DOCK_PICKUP` 会拒绝执行，先退到坞前安全入口。
-- 这些宏不经过换头插件，插件记录的当前工具不会变。用 `DOCK_BACK` 把热端放进坞以后，要用 `DOCK_PICKUP` + `DOCK_OUT` 拿回来，保持和插件记录一致。
+- 打印头上装的热端要和弹窗选的工具一致。
+- 弹窗的放回、抓取动作不经过换头插件，插件记录的当前工具不会变。弹窗只在"热端在打印头上"时才显示"连续取放"，而且会检查插件记录的当前工具和弹窗选的是否一致。
 
 ## 要改的参数
 
@@ -200,7 +177,7 @@ TOOLCHANGE_TEST TOOL=0 COUNT=5 WAIT=2   ; 第 5 步
 | `config/modules/multitool/multitool_plugin.cfg` 第 43 行 | `accel_swap` | 现在 8000，超过机器 `max_accel` 5000，建议改成 5000 |
 | `config/profile_multitool.cfg` 第 40 行 | `[stepper_y] position_min` | `dock_y` 改得更深时，要比最深的 `dock_y` 再小 3～5 mm |
 
-**改完任何参数**：把文件同步到打印机 `~/printer_data/config/`，执行 `RESTART`（网页编辑器里点"保存并重启"会自动重启）。手动逐行测试时用的是命令里写死的坐标，不需要重启；用 `T0` / `UNTOOL` / `TOOLCHANGE_TEST` 测试前才要先改参数、重启。
+**改完任何参数**：把文件同步到打印机 `~/printer_data/config/`，执行 `RESTART`（网页编辑器里点"保存并重启"会自动重启）。手动逐行测试时用的是命令里写死的坐标，不需要重启；用 `T0` / `UNTOOL` 或弹窗里的"连续取放"测试前，要先把参数写进文件并重启，或者用弹窗临时改。
 
 ## 原理
 
@@ -435,37 +412,12 @@ G0 X283.65 Y2.1 F600        ; 带着热端退出
 **这一步改：速度（第 36～42 行）、`accel_swap`（`multitool_plugin.cfg` 第 43 行）。**
 
 1. 确认第 1～3 步测出的值都已填进 `changer_cxchanger.cfg`，同步到打印机，`RESTART`。
-2. 装着耗材，调试速度下用 `TOOLCHANGE_TEST` 反复取放（宏在 `multitool_plugin.cfg` 末尾）：
-   ```
-   TOOLCHANGE_TEST TOOL=0 COUNT=10 WAIT=2
-   ```
-   T0 抓取 → 放回，重复 10 次，每次换头后停 2 秒，方便观察。控制台会显示"第 3/10 次"这样的进度，出错（撞、超出行程）会立即停止。宏发现不了"热端没留在坞里"这类不报错的问题，人要在旁边看，不对马上点急停。
-3. 检查是否丢步：每 5 次重新归位一次 XY，归位后还能正常取放，说明位置没有漂：
-   ```
-   TOOLCHANGE_TEST TOOL=0 COUNT=20 REHOME=5
-   ```
-   归位后第一次就撞或者越来越偏，多半是丢步：检查皮带，把 `accel_swap` 改成 5000。
-4. 稳定后切到正常速度：第 36～38 行行首加 `#`，第 40～42 行删掉行首的 `#`，`RESTART`，再测一遍：
-   ```
-   TOOLCHANGE_TEST TOOL=0 COUNT=20 REHOME=5
-   ```
-5. 调好两个以上的头后，测打印时那样的直接换头（中间不放空）：
-   ```
-   TOOLCHANGE_TEST TOOLS=0,1 COUNT=10
-   ```
+2. 装着耗材，调试速度下用换头插件连续取放：打开 `DOCK_TUNE TOOL=0`，热端在打印头上时点"**连续取放 5 轮**"（控制台写法：`DOCK_TUNE A=cycle COUNT=10`，次数可改）。每轮是 `UNTOOL` 放回、`T0` 抓取，控制台会显示"第 3/10 轮"这样的进度，出错（撞、超出行程）会立即停止。宏发现不了"热端没留在坞里"这类不报错的问题，人要在旁边看，不对马上点急停。
+3. 检查是否丢步：连续取放完以后 `G28 X Y`，再连续取放一次。归位后第一次就撞或者越来越偏，多半是丢步：检查皮带，把 `accel_swap` 改成 5000。
+4. 稳定后切到正常速度：第 36～38 行行首加 `#`，第 40～42 行删掉行首的 `#`，`RESTART`，再连续取放一遍。
+5. 调好两个以上的头后，测打印时那样的直接换头（中间不放空）：弹窗里点"**全部头混切 5 轮**"，或控制台 `DOCK_TUNE A=cycle TOOLS=0,1 COUNT=10`。
 
-`TOOLCHANGE_TEST` 参数：
-
-| 参数 | 默认 | 说明 |
-|---|---|---|
-| `TOOL` | 0（T0） | 单个工具：每次抓取 → 放回 |
-| `TOOLS` | — | 多个工具，逗号分隔，比如 `0,1`：每轮按顺序依次换头，中间不放空；给了 `TOOLS` 就不看 `TOOL` |
-| `COUNT` | 5 | 次数（用 `TOOLS` 时是轮数），1～100 |
-| `REHOME` | 0 | 每多少次重新归位 XY，0 = 不归位 |
-| `WAIT` | 0 | 每次换头后停顿的秒数 |
-| `KEEP` | 0 | 1 = 结束时保留最后一个工具在打印头上；0 = 结束时放回（`UNTOOL`） |
-
-开始前打印头上有热端时，宏会先 `UNTOOL` 放回；没有归位时会先 `G28`。工具号超出 `tool_count`、或 `COUNT` 不在 1～100 时直接报错，不动作。
+连续取放要求：热端在打印头上、打印头在坞外，而且换头插件记录的当前工具和弹窗选的工具一致（不一致会提示怎么改）。没有归位时会先 `G28`。
 
 ## 调其他头 {#other-tools}
 
@@ -489,7 +441,7 @@ G0 X283.65 Y2.1 F600        ; 带着热端退出
 | 第 1 步 1.2（`dock_y`） | 已测 | 1.1 能不用力进孔就跳过；进不去再测 |
 | 第 2 步（横移后 X） | 已测，`dock_shift_x` = -3 | 装着耗材确认横移后耗材完全没阻力。不行**只改这个头的 `dock_x`**（2.2 第一种），不要动共用的 `dock_shift_x` |
 | 第 3、4 步 | 已测（对刀流程中各取放 1 次） | 每个都确认一次 |
-| 第 5 步 | 待做 | 每个头 `TOOLCHANGE_TEST TOOL=N COUNT=10`，全部调好后 `TOOLCHANGE_TEST TOOLS=0,1,2… COUNT=5` 混切 |
+| 第 5 步 | 待做 | 每个头在弹窗里"连续取放"，全部调好后"全部头混切" |
 
 建议按顺序一个一个调，**调完一个、填进配置、再调下一个**。
 
@@ -552,7 +504,7 @@ G0 X{D} Y2.1 F600            ; 带出热端，耗材夹紧
 然后 `RESTART`，按第 5 步测试：
 
 ```
-TOOLCHANGE_TEST TOOL=N COUNT=10 WAIT=2
+DOCK_TUNE A=cycle COUNT=10
 ```
 
 ## 本机记录 {#records}
@@ -578,7 +530,7 @@ TOOLCHANGE_TEST TOOL=N COUNT=10 WAIT=2
 | 4 | 282.35 | -2 | **装上耗材后放回失败**：挤出机还夹着耗材，打印头后退时把热端带出坞 |
 | 5 | 282.85 | -2.5 | 跟随 T1 的调整整体 +0.5；横移后 X 仍为 280.35。一键对刀中取放 1 次无报错 |
 | 6 | 282.85 → 284.65 | -2.5 | 2026-11-05 调整过热端后换头撞，进坞 X 先定为 284.65 |
-| 7 | 284.65 → 283.65 | -3 | 284.65 偏右，每次 -0.25 试到 283.9、283.65 都顺滑（重新 `G28 X Y` 后 283.65 仍顺滑），定 **283.65**。装着耗材横移：-3.25 撞，-3 不撞且耗材完全松开，定 **-3**。放回（后退 14）T0 留在坞里，抓取成功，`TOOLCHANGE_TEST TOOL=0 COUNT=5 WAIT=2` 通过 |
+| 7 | 284.65 → 283.65 | -3 | 284.65 偏右，每次 -0.25 试到 283.9、283.65 都顺滑（重新 `G28 X Y` 后 283.65 仍顺滑），定 **283.65**。装着耗材横移：-3.25 撞，-3 不撞且耗材完全松开，定 **-3**。放回（后退 14）T0 留在坞里，抓取成功，连续取放 5 次通过（当时用的 `TOOLCHANGE_TEST`，现已并入 `DOCK_TUNE`） |
 
 - 进坞的 X 余量只有约 ±0.5 mm，撞几次后中心就会变。余量这么小，后面容易再撞，可以考虑把坞上的大孔扩一点或给入口加倒角。
 
@@ -606,6 +558,6 @@ TOOLCHANGE_TEST TOOL=N COUNT=10 WAIT=2
 ### 待办
 
 - T1 装回后从第 1 步重测进坞 X，再确认横移 -3 能松开耗材、不撞。
-- T0、T1 带耗材跑 `TOOLCHANGE_TEST TOOLS=0,1 COUNT=10`，再切正常速度测。
+- T0、T1 带耗材在弹窗里"全部头混切"（`DOCK_TUNE A=cycle TOOLS=0,1 COUNT=10`），再切正常速度测。
 - `accel_swap` 降到 5000 以下。
 - T2～T7 按[调其他头](#other-tools)实测，填上表。

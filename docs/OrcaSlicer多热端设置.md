@@ -152,7 +152,8 @@ PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEM
 打印前先确认换头本身没问题（带着耗材）：
 
 ```
-TOOLCHANGE_TEST TOOLS=0,1 COUNT=10
+DOCK_TUNE TOOL=0
+DOCK_TUNE A=cycle TOOLS=0,1 COUNT=10
 ```
 
 连续 10 轮 T0 → T1 换头没有撞击、热端都能正确放回和带出，再开始打印。见 [停靠坞与换头动作调试](/guide/debug/dock#step-5)。
