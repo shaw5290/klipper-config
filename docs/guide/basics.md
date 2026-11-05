@@ -10,7 +10,7 @@
 | 热端 | 喷嘴 + 加热块 + 加热棒 + 热敏，多头机型里是可以换下来的那部分。T0、T1… 指的就是第几个热端 |
 | 停靠坞（坞） | 热端不用时挂的地方，在热床前方，Y 是负数 |
 | 加热棒 / 热敏 | 加热棒负责发热，热敏负责测温。两根线都接在多热端扩展板上：T1 的加热棒接 `T1H` 口，热敏接 `T1S` 口 |
-| 宏 | 写在配置文件里的一组命令，起个名字就能调用，比如 `PRINT_START`、`DOCK_MOVE` |
+| 宏 | 写在配置文件里的一组命令，起个名字就能调用，比如 `PRINT_START`、`DOCK_TEST` |
 | 配置文件 | 打印机上 `~/printer_data/config/` 里的 `.cfg` 文件。本仓库的 `config/` 目录就是它的副本 |
 
 不知道某个宏是干什么的：在控制台输入 `MACRO_HELP`，会按分类列出所有宏和说明。
@@ -21,7 +21,7 @@
 
 | 命令长什么样 | 在哪里输入 | 例子 |
 |---|---|---|
-| G-code 和宏：大写字母开头 | 网页上的**控制台**（Mainsail / Fluidd 仪表盘里的"控制台"面板） | `G28`、`G0 X100 F3000`、`DOCK_MOVE X=150 Y=100` |
+| G-code 和宏：大写字母开头 | 网页上的**控制台**（Mainsail / Fluidd 仪表盘里的"控制台"面板） | `G28`、`G0 X100 F3000`、`DOCK_TEST TOOL=0 COUNT=5` |
 | Linux 命令：小写，常带 `~/` 路径 | 打印机的 **SSH 终端** | `grep ... ~/printer_data/logs/klippy.log`、`ls`、`sudo systemctl restart klipper` |
 
 在控制台里输入 Linux 命令会报 `Unknown command:"GREP -"` 这样的错，不会有任何效果。
