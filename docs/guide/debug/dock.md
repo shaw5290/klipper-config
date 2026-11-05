@@ -54,7 +54,7 @@
 | `MULTITOOL_PICKUP_TOOL` | 取：换头插件抓取热端时调用（不要直接点，用 `T0` / `T1`） |
 | `DOCK_TEST` | 连续取放测试：`DOCK_TEST TOOL=0 COUNT=10`，重复 `UNTOOL` → `T0`，走插件正常流程（抬 Z、换头加速度、偏移、状态都和打印时一样） |
 
-`DOCK_TEST` 要求打印头上装着 TOOL 这个热端，而且插件记录的当前工具也是它；不一致时会提示用 `SAVE_VARIABLE VARIABLE=current_tool VALUE=n` 改，再 `RESTART`。在 Mainsail / Fluidd 宏面板里点 `DOCK_TEST` 旁边的箭头可以填 TOOL、COUNT。
+当前不是 TOOL 这个头时，`DOCK_TEST` 会先 `T{TOOL}` 换过去再开始测。在 Mainsail / Fluidd 宏面板里点 `DOCK_TEST` 旁边的箭头可以填 TOOL、COUNT。
 
 撞得重（电机"咯咯"响、卡住）时直接按急停，见[调试规则](#rules)。
 
