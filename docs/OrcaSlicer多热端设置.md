@@ -116,14 +116,14 @@ T{next_extruder}
 2. 热床开始升温，同时 `G28` 归零
 3. 等热床到温（`M190`）
 4. 三点调平 `Z_TILT_ADJUST` → `G28 Z`（未引用调平模块时自动跳过）
-5. **打印前对刀**（默认开启，`CALIBRATE=0` 关闭）：对本次用到的工具依次执行 `CALIBRATE_TOOL`（换头 → 加热 150°C → tap 测 Z → 线圈测 XY → 保存偏移）。T0 是基准，即使本次没用到也会校准；对刀后关闭非首个工具的加热
+5. **打印前对刀**（默认开启，只更新 XY，`CALIBRATE=0` 关闭）：对本次用到的工具依次执行 `CALIBRATE_TOOL`（换头 → 加热 150°C → tap 测 Z → 线圈测 XY → 保存偏移）。T0 是基准，即使本次没用到也会校准；对刀后关闭非首个工具的加热
 6. 扫网床 `BED_MESH_CALIBRATE`（放在对刀之后，避免网床补偿影响 tap 测 Z）
 7. 换上首个工具 `T{INITIAL_TOOL}`（插件自动加载刚校准的偏移）
 8. 等首个工具到温（`M109 T{INITIAL_TOOL} S{温度}`）
 9. 重置挤出、抬高 Z，开始打印
 
-::: tip 当前默认值（2026-11-06）
-- `CALIBRATE` 默认 **1**：每次打印前对本次用到的工具对刀（T0 为基准，总会校准），测出各头的 XYZ 偏移。热端每次装上的位置、喷嘴残料、热床温度都会让偏移变化，所以默认每次都校准。
+::: tip 当前默认值（2026-11-07）
+- `CALIBRATE` 默认 **1**：打印前对本次用到的工具对刀，**只更新 X、Y 偏移**；Z 偏移（`tN_offset_z`）不会被修改。涡流测的 Z 不准，Z 偏移手动设置（垫纸或打印时 babystep 后 `SAVE_VARIABLE VARIABLE=t1_offset_z VALUE=…`）。不想对刀时在 `PRINT_START_CALIBRATE` 行末尾加 `CALIBRATE=0`。
 - `TAP` 默认 **0**：打印前不用 tap 定 T0 的 Z。需要时在 `PRINT_START_TAP` 后面加 `TAP=1`，或把 `print.cfg` 里的 `default(0)` 改成 `default(1)`。
 :::
 
