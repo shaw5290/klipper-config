@@ -120,7 +120,9 @@ T{next_extruder}
 6. 扫网床 `BED_MESH_CALIBRATE`（放在对刀之后，避免网床补偿影响 tap 测 Z）
 7. 换上首个工具 `T{INITIAL_TOOL}`（插件自动加载刚校准的偏移）
 8. 等首个工具到温（`M109 T{INITIAL_TOOL} S{温度}`）
-9. 重置挤出、抬高 Z，开始打印
+9. **画预挤出线**（像 A1 / P1）：在热床前边缘 Y=3 处先挤一小坨，再画一条来回的粗线（约 180 mm），回抽、擦嘴后开始打印。只给首个工具画，其它工具由擦拭塔预挤出；不想画时在 `PRINT_START_TOOL` 行末尾加 `PURGE=0`
+
+打印结束（`PRINT_END`）和取消打印（`CANCEL_PRINT`）时会先回抽 2 mm（热端低于 170°C 时跳过，冷挤出保护），再抬升 Z、关闭加热。
 
 ::: tip 当前默认值（2026-11-07）
 - `CALIBRATE` 默认 **1**：打印前对本次用到的工具对刀，**只更新 X、Y 偏移**；Z 偏移（`tN_offset_z`）不会被修改。涡流测的 Z 不准，Z 偏移手动设置（垫纸或打印时 babystep 后 `SAVE_VARIABLE VARIABLE=t1_offset_z VALUE=…`）。不想对刀时在 `PRINT_START_CALIBRATE` 行末尾加 `CALIBRATE=0`。
