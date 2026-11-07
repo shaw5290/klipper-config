@@ -42,7 +42,7 @@ PRINT_START_TOOL INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial
 | `PRINT_START_LEVEL` | 三点调平、重新 Z 归零 | — |
 | `PRINT_START_TAP` | 喷嘴加热到 150°C 后用 tap 定 Z（多头用 T0）。必须放在 `PRINT_START_LEVEL` 之后：之后不能再有 `G28`，否则 tap 的修正会被覆盖 | — |
 | `PRINT_START_CALIBRATE` | 打印前对刀（加 `CALIBRATE=0` 跳过） | `INITIAL_TOOL`、`Tn_USED`、`CALIBRATE` |
-| `PRINT_START_MESH` | 扫网床 | — |
+| `PRINT_START_MESH` | 加载保存的网床（不重新扫描，`MESH=1` 才扫床） | `MESH` |
 | `PRINT_START_TOOL` | 换上首个工具、等到温 | `INITIAL_TOOL`、`Tn_TEMP`、`Tn_USED` |
 
 **单行写法**（效果相同，但取消要等整个开始流程做完）：
@@ -116,8 +116,8 @@ T{next_extruder}
 2. 热床开始升温，同时 `G28` 归零
 3. 等热床到温（`M190`）
 4. 三点调平 `Z_TILT_ADJUST` → `G28 Z`（未引用调平模块时自动跳过）
-5. **打印前对刀**（默认开启，只更新 XY，`CALIBRATE=0` 关闭）：对本次用到的工具依次执行 `CALIBRATE_TOOL`（换头 → 加热 150°C → tap 测 Z → 线圈测 XY → 保存偏移）。T0 是基准，即使本次没用到也会校准；对刀后关闭非首个工具的加热
-6. 扫网床 `BED_MESH_CALIBRATE`（放在对刀之后，避免网床补偿影响 tap 测 Z）
+5. **打印前对刀**（默认关闭，每次打印不修改校准值；`CALIBRATE=1` 才执行）：对本次用到的工具依次执行 `CALIBRATE_TOOL`（换头 → 加热 150°C → tap 测 Z → 线圈测 XY → 保存偏移）。T0 是基准，即使本次没用到也会校准；对刀后关闭非首个工具的加热
+6. 加载保存的网床 `BED_MESH_PROFILE LOAD=default`（每次打印不修改；网床要先手动 `BED_MESH_CALIBRATE` + `SAVE_CONFIG` 保存一次。某次要重新扫床，在 `PRINT_START_MESH` 后面加 `MESH=1`）
 7. 换上首个工具 `T{INITIAL_TOOL}`（插件自动加载刚校准的偏移）
 8. 等首个工具到温（`M109 T{INITIAL_TOOL} S{温度}`）
 9. **画预挤出线**（像 A1 / P1）：在热床前边缘 Y=3 处先挤一小坨，再画一条来回的粗线（约 180 mm），回抽、擦嘴后开始打印。只给首个工具画，其它工具由擦拭塔预挤出；不想画时在 `PRINT_START_TOOL` 行末尾加 `PURGE=0`
@@ -125,11 +125,11 @@ T{next_extruder}
 打印结束（`PRINT_END`）和取消打印（`CANCEL_PRINT`）时会先回抽 2 mm（热端低于 170°C 时跳过，冷挤出保护），再抬升 Z、关闭加热。
 
 ::: tip 当前默认值（2026-11-07）
-- `CALIBRATE` 默认 **1**：打印前对本次用到的工具对刀，**只更新 X、Y 偏移**；Z 偏移（`tN_offset_z`）不会被修改。涡流测的 Z 不准，Z 偏移手动设置（垫纸或打印时 babystep 后 `SAVE_VARIABLE VARIABLE=t1_offset_z VALUE=…`）。不想对刀时在 `PRINT_START_CALIBRATE` 行末尾加 `CALIBRATE=0`。
+- `CALIBRATE` 默认 **0**：**每次打印不修改校准值**（偏移、网床都不改，只做三点调平），直接用手动校准保存的偏移（X、Y 用 `CALIBRATE_TOOL`，Z 用 `TOOL_Z_CALIBRATE` / `TOOL_OFFSET_SET`，热端拆装或换喷嘴后手动做）。确实要某次打印前对刀，在 `PRINT_START_CALIBRATE` 行末尾加 `CALIBRATE=1`。
 - `TAP` 默认 **0**：打印前不用 tap 定 T0 的 Z。需要时在 `PRINT_START_TAP` 后面加 `TAP=1`，或把 `print.cfg` 里的 `default(0)` 改成 `default(1)`。
 :::
 
-对刀每个工具约 1 分多钟（换头 + 加热 + 扫描）。不想某次对刀时，在起始 G-code 末尾加 `CALIBRATE=0`，直接使用上次保存的偏移：
+对刀每个工具约 1 分多钟（换头 + 加热 + 扫描）。默认不对刀，直接使用保存的偏移；起始 G-code 末尾写不写 `CALIBRATE=0` 效果一样：
 
 ```
 PRINT_START BED=[first_layer_bed_temperature] INITIAL_TOOL=[initial_tool] T0_TEMP={nozzle_temperature_initial_layer[0]} T0_USED={is_extruder_used[0]} T1_TEMP={nozzle_temperature_initial_layer[1]} T1_USED={is_extruder_used[1]} CALIBRATE=0
