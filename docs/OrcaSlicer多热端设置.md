@@ -126,7 +126,7 @@ T{next_extruder}
 
 ::: tip 当前默认值（2026-11-07）
 - `CALIBRATE` 默认 **0**：**每次打印不修改校准值**（偏移、网床都不改，只做三点调平），直接用手动校准保存的偏移（X、Y 用 `CALIBRATE_TOOL`，Z 用 `TOOL_Z_CALIBRATE` / `TOOL_OFFSET_SET`，热端拆装或换喷嘴后手动做）。确实要某次打印前对刀，在 `PRINT_START_CALIBRATE` 行末尾加 `CALIBRATE=1`。
-- `TAP` 默认 **0**：打印前不用 tap 定 T0 的 Z。需要时在 `PRINT_START_TAP` 后面加 `TAP=1`，或把 `print.cfg` 里的 `default(0)` 改成 `default(1)`。
+- `TAP` 默认 **1**：打印前用 tap 定 T0 的 Z（喷嘴接触床面，消除温漂），第一层间隙由 `printer.cfg` 底部的 `[stepper_z] position_endstop` 决定，见 [挤出与第一层](/guide/debug/08-extrusion)。不想 tap 时加 `TAP=0`。
 :::
 
 对刀每个工具约 1 分多钟（换头 + 加热 + 扫描）。默认不对刀，直接使用保存的偏移；起始 G-code 末尾写不写 `CALIBRATE=0` 效果一样：

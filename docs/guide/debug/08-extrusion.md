@@ -23,16 +23,38 @@
 - **表面发亮、出现波纹或刮痕**：Z 太低，往上调。
 - **一部分好一部分有缝**：床面各处高度不一样，检查网床是否生效（控制台有 `Mesh Bed Leveling Complete`）、调平是否做了。
 
-调好后：
+调好后保存，方法取决于打印前有没有用 tap 定 Z。现在打印开始宏 `PRINT_START_TAP` **默认用 tap 定 Z**（按小螃蟹教程：喷嘴接触床面定 Z=0，消除非接触测距最多 0.2mm 的温漂），所以按下面"tap 模式"保存。
+
+### tap 模式（默认）：间隙存在 `[stepper_z] position_endstop`
+
+`SET_Z_FROM_PROBE METHOD=tap` 会把"喷嘴接触床面的位置"设成 Z = `position_endstop`。`position_endstop` 越大，Z=0 越往下，喷嘴越贴近床面。
+
+**第一次用时**，在打印机上的 `printer.cfg` 最底部 SAVE_CONFIG 区块里加上（教程要求，加在 `#*#` 区块里）：
+
+```
+#*#
+#*# [stepper_z]
+#*# position_endstop = 0
+```
+
+`RESTART` 后，打印时用 babystep 调第一层。调好后**看 babystep 一共调了多少**（Mainsail Z 偏移面板上显示的数，或 `GET_POSITION` 里 `gcode homing` 的 Z），手动改 `position_endstop`：
+
+```
+新 position_endstop = 原 position_endstop - babystep 总量
+```
+
+例：原来 0，babystep 往下调了 -0.04 才合适 → `position_endstop = 0.04`；往上调了 +0.02 → `position_endstop = -0.02`。打印结束后改 `printer.cfg` 底部那一行，`RESTART`。Mainsail 里可能没有"保存到限位"的按钮，按教程手动改即可。
+
+::: warning 喷嘴要干净
+tap 靠喷嘴碰床面，喷嘴尖有残料就会测高。打印前喷嘴 150°C 时擦一下；有擦嘴刷可以加教程的 `CLEAN_NOZZLE`（会在热床前边缘 Z=-0.1 来回蹭，没有刷子不要用）。
+:::
+
+### 非接触模式（`TAP=0`）
 
 ```
 Z_OFFSET_APPLY_PROBE
 SAVE_CONFIG              ; 打印结束后再执行
 ```
-
-::: tip 用 tap 定 Z
-打印开始宏 `PRINT_START_TAP` 在调试阶段默认跳过 tap（`TAP=0`）。tap 调通后，在切片开始 G-code 里传 `TAP=1`，每次打印前用喷嘴真实接触热床的位置作为 Z=0，第一层更稳定。
-:::
 
 ## 3. 压力提前（Pressure Advance）
 
